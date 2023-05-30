@@ -10,6 +10,11 @@ namespace Android2048
     {
         private int score;
         private int bestScore;
+        public Score()
+        {
+            this.score = 0;
+            this.bestScore = 0;
+        }
         public Score(int bestScore)
         {
             this.score = 0;
