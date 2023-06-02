@@ -152,9 +152,9 @@ namespace Android2048
             }
             return isOccupied;
         }
-        public bool MoveUp()
+        public bool MoveLeft()
         {
-            bool isOccupied = MoveUpLoop();
+            bool isOccupied = MoveLeftLoop();
             for (int r = 0; r < this.boardSize; r++)
             {
                 for (int c = 0; c < (this.boardSize - 1); c++)
@@ -162,11 +162,11 @@ namespace Android2048
                     isOccupied = Combine(r, c+1, r, c, isOccupied);
                 }
             }
-            if (MoveUpLoop())
+            if (MoveLeftLoop())
                 isOccupied = true;
             return isOccupied;
         }
-        private bool MoveUpLoop()
+        private bool MoveLeftLoop()
         {
             bool isOccupied = false, columnOccupied = false;
             for (int r = 0; r < this.boardSize; r++)
@@ -186,9 +186,9 @@ namespace Android2048
             }
             return isOccupied;
         }
-        public bool MoveDown()
+        public bool MoveRight()
         {
-            bool isOccupied = MoveDownLoop();
+            bool isOccupied = MoveRightLoop();
             for (int r = 0; r < this.boardSize; r++)
             {
                 for (int c = this.boardSize - 1; c > 0; c--)
@@ -196,11 +196,11 @@ namespace Android2048
                     isOccupied = Combine(r, c - 1, r, c, isOccupied);
                 }
             }
-            if (MoveDownLoop()) 
+            if (MoveRightLoop()) 
                 isOccupied = true;
             return isOccupied;
         }
-        private bool MoveDownLoop()
+        private bool MoveRightLoop()
         {
             bool isOccupied = false, columnisOccupied = false;
             for (int r = 0; r < this.boardSize; r++)
@@ -220,9 +220,9 @@ namespace Android2048
             }
             return isOccupied;
         }
-        public bool MoveLeft()
+        public bool MoveUp()
         {
-            bool isOccupied = MoveLeftLoop();
+            bool isOccupied = MoveUpLoop();
             for (int c = 0; c < this.boardSize; c++)
             {
                 for (int r = 0; r < (this.boardSize - 1); r++)
@@ -230,11 +230,11 @@ namespace Android2048
                     isOccupied = Combine(r + 1, c, r, c, isOccupied);
                 }
             }
-            if (MoveLeftLoop())
+            if (MoveUpLoop())
                 isOccupied = true;
             return isOccupied;
         }
-        private bool MoveLeftLoop()
+        private bool MoveUpLoop()
         {
             bool isOccupied = false, rowisOccupied = false;
             for (int c = 0; c < this.boardSize; c++)
@@ -254,9 +254,9 @@ namespace Android2048
             }
             return isOccupied;
         }
-        public bool MoveRight()
+        public bool MoveDown()
         {
-            bool isOccupied = MoveRightLoop();
+            bool isOccupied = MoveDownLoop();
             for (int c = 0; c < this.boardSize; c++)
             {
                 for (int r = (this.boardSize - 1); r > 0; r--)
@@ -264,11 +264,11 @@ namespace Android2048
                     isOccupied = Combine(r-1, c, r, c, isOccupied);
                 }
             }
-            if (MoveRightLoop())
+            if (MoveDownLoop())
                 isOccupied = true;
             return isOccupied;
         }
-        private bool MoveRightLoop()
+        private bool MoveDownLoop()
         {
             bool isOccupied = false, rowisOccupied = true;
             for (int c = 0; c < this.boardSize; c++)

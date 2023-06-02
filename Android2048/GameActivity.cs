@@ -9,19 +9,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static Android.Views.View;
+using static Android.Views.GestureDetector;
 
 namespace Android2048
 {
     [Activity(Label = "GameActivity")]
-    public class GameActivity : Activity
+    public class GameActivity : Activity, IOnTouchListener, IOnGestureListener
     {
         ImageView[,] tiles;
-        TextView txtHelloMsg, txtScore, txtBestScore;
+        TextView txtHelloMsg, txtScore, txtBestScore, txtWinOrLose;
         Button btnRestart;
 
         Board board;
         Score score;
         Bitmap[] pictures;
+
+        GestureDetector gestureDetector;
 
         enum pictureCode { Pic0, Pic2, Pic4, Pic8, Pic16, Pic32, Pic64, Pic128, Pic256, Pic512, Pic1024, Pic2048 };
 
@@ -30,6 +34,128 @@ namespace Android2048
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.game_activity);
             InitVIews();
+
+            gestureDetector = new GestureDetector(this);
+        }
+        public override bool DispatchTouchEvent(MotionEvent ev)
+        {
+            gestureDetector.OnTouchEvent(ev);
+            return base.DispatchTouchEvent(ev);
+        }
+        public bool OnTouch(View v, MotionEvent e)
+        {
+            Toast.MakeText(this, "On Touch", ToastLength.Short).Show();
+            return gestureDetector.OnTouchEvent(e);
+        }
+        public bool OnDown(MotionEvent e)
+        {
+            return true;
+        }
+        public void OnLongPress(MotionEvent e)
+        {
+        }
+        public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+        {
+            return true;
+        }
+        public void OnShowPress(MotionEvent e)
+        {
+        }
+        public bool OnSingleTapUp(MotionEvent e)
+        {
+            return true;
+        }
+        public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
+        {
+            if (DistanceX(e1, e2) > DistanceY(e1, e2))
+            {
+                if (e1.GetX() > e2.GetX())
+                {
+                    if (this.board.MoveLeft())
+                    {
+                        if (!this.board.IsGameOver())
+                        {
+                            this.board.NewTile();
+                            ChangeColors();
+                        }
+                    }
+                    else if (this.board.IsGameOver())
+                        GameOver();
+                }
+                else if (e1.GetX() < e2.GetX())
+                {
+                    if (this.board.MoveRight())
+                    {
+                        if (!this.board.IsGameOver())
+                        {
+                            this.board.NewTile();
+                            ChangeColors();
+                        }
+                    }
+                    else if (this.board.IsGameOver())
+                        GameOver();
+                }
+            }
+            else
+            {
+                if (e1.GetY() > e2.GetY())
+                {
+                    if (this.board.MoveUp())
+                    {
+                        if (!this.board.IsGameOver())
+                        {
+                            this.board.NewTile();
+                            ChangeColors();
+                        }
+                    }
+                    else if (this.board.IsGameOver())
+                        GameOver();
+                }
+                else if (e1.GetY() < e2.GetY())
+                {
+                    if (this.board.MoveDown())
+                    {
+                        if (!this.board.IsGameOver())
+                        {
+                            this.board.NewTile();
+                            ChangeColors();
+                        }
+                    }
+                    else if (this.board.IsGameOver())
+                        GameOver();
+                }
+            }
+            if (this.board.FindBiggestTile() == 2048)
+            {
+                GameOver();
+            }
+            this.score.UpdateScore(this.board.GetScoreValue());
+            ChangeScores();
+            return true;
+        }
+
+        private float DistanceY(MotionEvent e1, MotionEvent e2)
+        {
+            return Math.Abs(e1.GetY() - e2.GetY());
+        }
+
+        private float DistanceX(MotionEvent e1, MotionEvent e2)
+        {
+            return Math.Abs(e1.GetX()-e2 .GetX());
+        }
+
+        private void GameOver()
+        {
+            string winOrLose;
+            if (this.board.FindBiggestTile() == 2048)
+            {
+                winOrLose = "You won!!";
+            }
+            else
+            {
+                winOrLose = "You lost";
+            }
+            txtWinOrLose.Text = winOrLose;
         }
 
         private void InitVIews()
@@ -39,6 +165,7 @@ namespace Android2048
 
             txtScore = FindViewById<TextView>(Resource.Id.txtScore);
             txtBestScore = FindViewById<TextView>(Resource.Id.txtBestScore);
+            txtWinOrLose = FindViewById<TextView>(Resource.Id.txtWinOrLose);
             txtHelloMsg = FindViewById<TextView>(Resource.Id.txtHelloMsg);
             txtHelloMsg.Text = "Hello " + Intent.GetStringExtra("fUsername") + "!";
 
@@ -137,6 +264,7 @@ namespace Android2048
 
         private void BtnRestart_Click(object sender, EventArgs e)
         {
+            txtWinOrLose.Text = string.Empty;
             StartGame();
         }
 
