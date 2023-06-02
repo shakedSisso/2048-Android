@@ -206,4 +206,15 @@
         android:textColor="#000"
         android:layout_gravity="center" 
         android:textStyle="bold"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="15dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtWinOrLose"
+        android:layout_gravity="center"
+        android:textSize="30sp"
+        android:textColor="#420501"
+        android:textStyle="bold"/>
 </LinearLayout>
