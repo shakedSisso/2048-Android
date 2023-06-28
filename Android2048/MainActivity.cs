@@ -66,7 +66,51 @@ namespace Android2048
         //}
         private void BtnSignup_Click(object sender, EventArgs e)
         {
+            custom_d = new Android.App.Dialog(this);
+            custom_d.SetContentView(Resource.Layout.signup_activity);
+            custom_d.SetTitle("Signup");
+            custom_d.SetCancelable(true);
+            etName = custom_d.FindViewById<EditText>(Resource.Id.etName);
+            etPass = custom_d.FindViewById<EditText>(Resource.Id.etPass);
+            tvPassError = custom_d.FindViewById<TextView>(Resource.Id.tvPassError);
+            btnCutsomSignup = custom_d.FindViewById<Button>(Resource.Id.btnCutsomSignup);
+            btnCutsomSignup.Click += BtnCutsomSignup_Click;
+            custom_d.Show();
+        }
 
+        private void BtnCutsomSignup_Click(object sender, EventArgs e)
+        {
+            if (DoesUserExist(etName.Text))
+            {
+                tvPassError.Text = "User already exists";
+            }
+            else if (!IsPasswordValid(etPass.Text))
+            {
+                tvPassError.Text = "Password is must be:\n-At least 8 characters long\n-1 upper and 1 lower case letter\n-1 special character\n-At least 1 number";
+            }
+            else
+            {
+                User user = new User(etName.Text, etPass.Text);
+                db.Insert(user);
+                custom_d.Dismiss();
+                Intent intent = new Intent(this, typeof(GameActivity));
+                intent.PutExtra("fUsername", etName.Text);
+                intent.PutExtra("dbPath", this.dbPath);
+                db.Close();
+                StartActivity(intent);
+            }
+        }
+
+        private bool IsPasswordValid(string password)
+        {
+            Regex regex = new Regex(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$");
+            Match match = regex.Match(password);
+
+            if (match.Success)
+            {
+                return true;
+            }
+            return false;
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
