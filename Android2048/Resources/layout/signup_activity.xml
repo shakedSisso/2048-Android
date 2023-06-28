@@ -19,6 +19,13 @@
         android:inputType="text"
         android:textSize="20sp"
         android:id="@+id/etPass"/>
+    <TextView 
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:textSize="17sp" 
+        android:layout_gravity="center" 
+        android:textColor="#c40202" 
+        android:id="@+id/tvPassError"/>
 	<Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
