@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using static Android.Views.View;
 using static Android.Views.GestureDetector;
+using SQLite;
 
 namespace Android2048
 {
@@ -18,14 +19,19 @@ namespace Android2048
     public class GameActivity : Activity, IOnTouchListener, IOnGestureListener
     {
         ImageView[,] tiles;
+        ImageView ivHighestTile;
         TextView txtHelloMsg, txtScore, txtBestScore, txtWinOrLose;
-        Button btnRestart;
+        Button btnRestart, btnLogout;
 
         Board board;
         Score score;
         Bitmap[] pictures;
 
         GestureDetector gestureDetector;
+
+        string dbPath;
+        SQLiteConnection db;
+        User user;
 
         enum pictureCode { Pic0, Pic2, Pic4, Pic8, Pic16, Pic32, Pic64, Pic128, Pic256, Pic512, Pic1024, Pic2048 };
 
@@ -37,6 +43,26 @@ namespace Android2048
 
             gestureDetector = new GestureDetector(this);
         }
+
+        private void Logout()
+        {
+            StartGame();
+            db.Close();
+            Intent intent = new Intent(this, typeof(MainActivity));
+            StartActivity(intent);
+        }
+
+        public override bool OnKeyDown(Keycode keyCode, KeyEvent e)
+        {
+            if (keyCode == Keycode.Back && e.Action == KeyEventActions.Down)
+            {
+                Logout();
+                return true;
+            }
+
+            return base.OnKeyDown(keyCode, e);
+        }
+
         public override bool DispatchTouchEvent(MotionEvent ev)
         {
             gestureDetector.OnTouchEvent(ev);
@@ -125,11 +151,16 @@ namespace Android2048
                         GameOver();
                 }
             }
+            if (int.Parse(ivHighestTile.Tag.ToString()) < this.board.FindBiggestTile())
+            {
+                ivHighestTile.Tag = this.board.FindBiggestTile().ToString();
+            }
             if (this.board.FindBiggestTile() == 2048)
             {
                 GameOver();
             }
             this.score.UpdateScore(this.board.GetScoreValue());
+            ivHighestTile.SetImageBitmap(PickImage(int.Parse(ivHighestTile.Tag.ToString())));
             ChangeScores();
             return true;
         }
@@ -141,7 +172,7 @@ namespace Android2048
 
         private float DistanceX(MotionEvent e1, MotionEvent e2)
         {
-            return Math.Abs(e1.GetX()-e2 .GetX());
+            return Math.Abs(e1.GetX() - e2.GetX());
         }
 
         private void GameOver()
@@ -160,23 +191,34 @@ namespace Android2048
 
         private void InitVIews()
         {
-            board = new Board();
-            score = new Score();
+            this.dbPath = Intent.GetStringExtra("dbPath");
+            db = new SQLiteConnection(this.dbPath);
+            this.user = db.Get<User>(Intent.GetStringExtra("fUsername"));
 
-            txtScore = FindViewById<TextView>(Resource.Id.txtScore);
-            txtBestScore = FindViewById<TextView>(Resource.Id.txtBestScore);
-            txtWinOrLose = FindViewById<TextView>(Resource.Id.txtWinOrLose);
-            txtHelloMsg = FindViewById<TextView>(Resource.Id.txtHelloMsg);
-            txtHelloMsg.Text = "Hello " + Intent.GetStringExtra("fUsername") + "!";
+            board = new Board();
+            score = new Score(user.BestScore);
 
             tiles = new ImageView[4, 4];
             InitBoard();
             InitPictures();
 
+            ivHighestTile = FindViewById<ImageView>(Resource.Id.ivHighestTile);
+            ivHighestTile.Tag = user.HighestTile.ToString();
+            ivHighestTile.SetImageBitmap(PickImage(int.Parse(ivHighestTile.Tag.ToString())));
+            txtScore = FindViewById<TextView>(Resource.Id.txtScore);
+            txtBestScore = FindViewById<TextView>(Resource.Id.txtBestScore);
+            txtWinOrLose = FindViewById<TextView>(Resource.Id.txtWinOrLose);
+            txtHelloMsg = FindViewById<TextView>(Resource.Id.txtHelloMsg);
+            txtHelloMsg.Text = "Hello " + user.Name + "!";
+
+
             btnRestart = FindViewById<Button>(Resource.Id.btnRestart);
+            btnLogout = FindViewById<Button>(Resource.Id.btnLogout);
             btnRestart.Click += BtnRestart_Click;
+            btnLogout.Click += BtnLogout_Click;
             StartGame();
         }
+
 
         private void InitPictures()
         {
@@ -199,6 +241,7 @@ namespace Android2048
         {
             board.ResetBoard();
             score.ResetScore();
+            UpdateDatabase();
             ChangeColors();
             ChangeScores();
         }
@@ -218,54 +261,72 @@ namespace Android2048
             {
                 for (int j = 0; j < size; j++)
                 {
-                    switch (b[i, j].GetValue())
-                    {
-                        default:
-                            pic = pictures[(int)pictureCode.Pic0];
-                            break;
-                        case 2:
-                            pic = pictures[(int)pictureCode.Pic2];
-                            break;
-                        case 4:
-                            pic = pictures[(int)pictureCode.Pic4];
-                            break;
-                        case 8:
-                            pic = pictures[(int)pictureCode.Pic8];
-                            break;
-                        case 16:
-                            pic = pictures[(int)pictureCode.Pic16];
-                            break;
-                        case 32:
-                            pic = pictures[(int)pictureCode.Pic32];
-                            break;
-                        case 64:
-                            pic = pictures[(int)pictureCode.Pic64];
-                            break;
-                        case 128:
-                            pic = pictures[(int)pictureCode.Pic128];
-                            break;
-                        case 256:
-                            pic = pictures[(int)pictureCode.Pic256];
-                            break;
-                        case 512:
-                            pic = pictures[(int)pictureCode.Pic512];
-                            break;
-                        case 1024:
-                            pic = pictures[(int)pictureCode.Pic1024];
-                            break;
-                        case 2048:
-                            pic = pictures[(int)pictureCode.Pic2048];
-                            break;
-                    }
+                    pic = PickImage(b[i, j].GetValue());
                     tiles[i, j].SetImageBitmap(pic);
                 }
             }
+        }
+
+        private Bitmap PickImage(int value)
+        {
+            Bitmap pic;
+            switch (value)
+            {
+                default:
+                    pic = pictures[(int)pictureCode.Pic0];
+                    break;
+                case 2:
+                    pic = pictures[(int)pictureCode.Pic2];
+                    break;
+                case 4:
+                    pic = pictures[(int)pictureCode.Pic4];
+                    break;
+                case 8:
+                    pic = pictures[(int)pictureCode.Pic8];
+                    break;
+                case 16:
+                    pic = pictures[(int)pictureCode.Pic16];
+                    break;
+                case 32:
+                    pic = pictures[(int)pictureCode.Pic32];
+                    break;
+                case 64:
+                    pic = pictures[(int)pictureCode.Pic64];
+                    break;
+                case 128:
+                    pic = pictures[(int)pictureCode.Pic128];
+                    break;
+                case 256:
+                    pic = pictures[(int)pictureCode.Pic256];
+                    break;
+                case 512:
+                    pic = pictures[(int)pictureCode.Pic512];
+                    break;
+                case 1024:
+                    pic = pictures[(int)pictureCode.Pic1024];
+                    break;
+                case 2048:
+                    pic = pictures[(int)pictureCode.Pic2048];
+                    break;
             }
+            return pic;
+        }
 
         private void BtnRestart_Click(object sender, EventArgs e)
         {
             txtWinOrLose.Text = string.Empty;
             StartGame();
+        }
+        private void BtnLogout_Click(object sender, EventArgs e)
+        {
+            Logout();
+        }
+
+        private void UpdateDatabase()
+        {
+            this.user.HighestTile = int.Parse(ivHighestTile.Tag.ToString());
+            this.user.BestScore = this.score.GetBestScore();
+            db.Update(this.user);
         }
 
         private void InitBoard()
