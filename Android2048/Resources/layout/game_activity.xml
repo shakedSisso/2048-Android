@@ -38,7 +38,7 @@
             android:textSize="20sp"
             android:id="@+id/txtScore"/>
         <View
-            android:layout_width="50dp"
+            android:layout_width="15dp"
             android:layout_height="match_parent"/>
         <TextView
             android:layout_width="wrap_content"
@@ -55,6 +55,21 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:id="@+id/txtBestScore"/>
+        <View
+            android:layout_width="15dp"
+            android:layout_height="match_parent"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Highest tile: "
+            android:textColor="#000"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+        <ImageView
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:id="@+id/ivHighestTile"
+            android:tag="2"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="400dp"
@@ -196,16 +211,33 @@
                 android:layout_weight="1"/>
         </LinearLayout>
     </LinearLayout>
-    <Button 
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content" 
-        android:id="@+id/btnRestart" 
-        android:text="Restart game" 
-        android:textSize="15dp" 
-        android:backgroundTint="#fad693"
-        android:textColor="#000"
-        android:layout_gravity="center" 
-        android:textStyle="bold"/>
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <Button 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content" 
+            android:id="@+id/btnRestart" 
+            android:text="Restart game" 
+            android:textSize="15dp" 
+            android:backgroundTint="#fad693"
+            android:textColor="#000"
+            android:layout_gravity="center" 
+            android:textStyle="bold"/>
+        <Button 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content" 
+            android:id="@+id/btnLogout" 
+            android:text="Logout" 
+            android:textSize="15dp" 
+            android:backgroundTint="#fad693"
+            android:textColor="#000"
+            android:layout_gravity="center" 
+            android:textStyle="bold"/>
+    </LinearLayout>
     <View
         android:layout_width="match_parent"
         android:layout_height="15dp"/>
@@ -215,6 +247,6 @@
         android:id="@+id/txtWinOrLose"
         android:layout_gravity="center"
         android:textSize="30sp"
-        android:textColor="#420501"
+        android:textColor="#c40202"
         android:textStyle="bold"/>
 </LinearLayout>
