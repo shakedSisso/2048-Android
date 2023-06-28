@@ -1,12 +1,14 @@
 ﻿using Android.App;
+using Android.Content;
+using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
-using AndroidX.AppCompat.App;
-using System;
+using Android.Views;
 using Android.Widget;
-using Android.Graphics;
-using Android.Content;
-//using SQLite;
+using AndroidX.AppCompat.App;
+using SQLite;
+using System;
+using System.Text.RegularExpressions;
 
 namespace Android2048
 {
@@ -16,9 +18,14 @@ namespace Android2048
         //SQLiteConnection connection;
 
         ImageView ivPicture;
-        EditText etUsername;
-        TextView tvError;
-        Button btnStart;
+        EditText etUsername, etPassword, etName, etPass;
+        TextView tvError, tvPassError;
+        Button btnStart, btnSignup, btnCutsomSignup;
+
+        Android.App.Dialog custom_d;
+
+        string dbPath;
+        SQLiteConnection db;
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -26,8 +33,10 @@ namespace Android2048
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_main);
 
-            //var db = new SQLiteConnection("C:\\Users\\test0\\OneDrive\\שולחן העבודה\\personal\\Android2048\\users.db");
+            this.dbPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "2048Users.db");
+            this.db = new SQLiteConnection(this.dbPath);
 
+            db.CreateTable<User>();
             InitViews();
         }
 
@@ -35,35 +44,74 @@ namespace Android2048
         {
             ivPicture = FindViewById<ImageView>(Resource.Id.ivPicture);
             etUsername = FindViewById<EditText>(Resource.Id.etUsername);
+            etPassword = FindViewById<EditText>(Resource.Id.etPassword);
             tvError = FindViewById<TextView>(Resource.Id.tvError);
             btnStart = FindViewById<Button>(Resource.Id.btnStart);
+            btnSignup = FindViewById<Button>(Resource.Id.btnSignup);
 
             Bitmap bitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.openningPicture);
             ivPicture.SetImageBitmap(bitmap);
 
             btnStart.Click += BtnStart_Click;
+            btnSignup.Click += BtnSignup_Click;
+        }
+        public override bool OnKeyDown(Keycode keyCode, KeyEvent e)
+        {
+            if (keyCode == Keycode.Back && e.Action == KeyEventActions.Down)
+            {
+                this.db.Close();
+                return true;
+            }
+
+            return base.OnKeyDown(keyCode, e);
         }
 
         private void BtnStart_Click(object sender, EventArgs e)
         {
-            if (etUsername.Text == string.Empty)
+            if (etUsername.Text == string.Empty || etPassword.Text == string.Empty)
             {
-                tvError.Text = "Please fill username";
+                tvError.Text = "Please fill all fields";
             }
             else
             {
-                tvError.Text = string.Empty;
-                Intent intent = new Intent(this, typeof(GameActivity));
-                intent.PutExtra("fUsername", etUsername.Text);
-                StartActivity(intent);
+                if (DoesUserExist(etUsername.Text) && DoesPasswordMatch(etUsername.Text, etPassword.Text))
+                {
+                    tvError.Text = string.Empty;
+                    Intent intent = new Intent(this, typeof(GameActivity));
+                    intent.PutExtra("fUsername", etUsername.Text);
+                    intent.PutExtra("dbPath", this.dbPath);
+                    db.Close();
+                    StartActivity(intent);
+                }
             }
 
         }
-        //private bool DoesUserExist()
-        //{
-        //    string query = @"SELECT * FROM USERS WHERE USERNAME = '" + etUsername.Text + "'";
-        //    return false;
-        //}
+
+        private bool DoesPasswordMatch(string username, string password)
+        {
+            User user = this.db.Table<User>().FirstOrDefault(u => u.Name == username);
+            if (user != null)
+            {
+                if (etPassword.Text != user.Password)
+                {
+                    tvError.Text = "Password is incorrect";
+                    return false;
+                }
+
+            }
+            return true;
+        }
+
+        private bool DoesUserExist(string username)
+        {
+            User user = this.db.Table<User>().FirstOrDefault(u => u.Name == username);
+            if (user == null)
+            {
+                tvError.Text = "User is not registered";
+                return false;
+            }
+            return true;
+        }
         private void BtnSignup_Click(object sender, EventArgs e)
         {
             custom_d = new Android.App.Dialog(this);
